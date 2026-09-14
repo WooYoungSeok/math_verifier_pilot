@@ -10,12 +10,17 @@ import _bootstrap  # noqa: F401
 
 import argparse
 import hashlib
+import os
 import time
 from pathlib import Path
 
+# Growing KV caches fragment the caching allocator; on Windows a full GPU then
+# silently spills to system RAM and generation slows 20x instead of OOM-ing.
+os.environ.setdefault("PYTORCH_CUDA_ALLOC_CONF", "expandable_segments:True")
+
 import torch
 from tqdm import tqdm
-from transformers import AutoModelForCausalLM, AutoTokenizer
+from transformers import AutoModelForCausalLM, AutoTokenizer, DynamicCache, StaticCache
 
 from kc_judge import LEVELS, MODELS
 from kc_judge.data import load_incorrect
@@ -41,6 +46,39 @@ def load_model(model_id: str):
     )
     model.eval()
     return tok, model
+
+
+def chunked_prefill(model, input_ids, attention_mask, chunk: int, max_new_tokens: int) -> StaticCache:
+    """Fill a static KV cache for all but the last prompt token, `chunk` rows
+    at a time. Prefill activations (~195 KB per token for a 7B model) are what
+    cap the batch size, and they only need to exist for the rows being
+    prefilled; the cache itself (~57 KB per token) is what the whole batch
+    decodes from. A static cache keeps decode memory flat (no per-step
+    re-allocation), and generate() picks it up as past_key_values and only
+    processes the final prompt token."""
+    B, T = input_ids.shape
+    cfg = model.config
+    cache = StaticCache(config=cfg, max_cache_len=T - 1 + max_new_tokens)
+    cache.early_initialization(
+        B, cfg.num_key_value_heads, cfg.hidden_size // cfg.num_attention_heads, model.dtype, model.device
+    )
+    ids, mask = input_ids[:, :-1], attention_mask[:, :-1]
+    pos = (mask.long().cumsum(-1) - 1).clamp(min=0)
+    for j in range(0, B, chunk):
+        part = DynamicCache()
+        model(
+            input_ids=ids[j : j + chunk],
+            attention_mask=mask[j : j + chunk],
+            position_ids=pos[j : j + chunk],
+            past_key_values=part,
+            use_cache=True,
+            logits_to_keep=1,
+        )
+        for layer, static_layer in zip(part.layers, cache.layers):
+            static_layer.keys[j : j + chunk, :, : T - 1].copy_(layer.keys)
+            static_layer.values[j : j + chunk, :, : T - 1].copy_(layer.values)
+        del part
+    return cache
 
 
 def run_level(tok, model, model_key: str, level: str, rows: list[dict], args) -> None:
@@ -69,11 +107,23 @@ def run_level(tok, model, model_key: str, level: str, rows: list[dict], args) ->
     if im_end is not None and im_end != tok.eos_token_id:
         eos_ids.append(im_end)
 
+    # Batch size is capped by the KV-cache budget (~57 KB per token for a 7B
+    # model in bf16; 72k tokens ~ 4 GB), so long prompts get smaller batches
+    # and peak memory stays under the card's 24 GB.
+    batches, i = [], 0
+    while i < len(prompts):
+        n = args.batch_size
+        while n > 1 and n * (prompts[min(i + n, len(prompts)) - 1][2] + args.max_new_tokens) > args.batch_tokens:
+            n -= 1
+        batches.append(prompts[i : i + n])
+        i += n
+
     t0 = time.time()
     n_tokens = 0
     with JsonlAppender(out) as w:
-        for i in tqdm(range(0, len(prompts), args.batch_size), desc=f"{model_key}/{level}"):
-            batch = prompts[i : i + args.batch_size]
+        pbar = tqdm(batches, desc=f"{model_key}/{level}")
+        for batch in pbar:
+            tb = time.time()
             enc = tok(
                 [p[1] for p in batch],
                 return_tensors="pt",
@@ -82,8 +132,12 @@ def run_level(tok, model, model_key: str, level: str, rows: list[dict], args) ->
                 max_length=args.max_ctx - args.max_new_tokens,
             ).to(model.device)
             with torch.inference_mode():
+                cache = chunked_prefill(
+                    model, enc.input_ids, enc.attention_mask, args.prefill_chunk, args.max_new_tokens
+                )
                 gen = model.generate(
                     **enc,
+                    past_key_values=cache,
                     max_new_tokens=args.max_new_tokens,
                     do_sample=False,
                     temperature=None,
@@ -91,7 +145,9 @@ def run_level(tok, model, model_key: str, level: str, rows: list[dict], args) ->
                     top_k=None,
                     eos_token_id=eos_ids,
                     pad_token_id=tok.pad_token_id,
+                    disable_compile=True,
                 )
+                del cache
             new = gen[:, enc.input_ids.shape[1] :]
             for (sid, text, n_in), ids in zip(batch, new):
                 ids = ids.tolist()
@@ -110,6 +166,14 @@ def run_level(tok, model, model_key: str, level: str, rows: list[dict], args) ->
                         "generation": tok.decode(body, skip_special_tokens=True).strip(),
                     }
                 )
+            del gen, enc, new
+            torch.cuda.empty_cache()
+            pbar.set_postfix(
+                bs=len(batch),
+                plen=batch[-1][2],
+                s=f"{time.time() - tb:.0f}",
+                peakGB=f"{torch.cuda.max_memory_reserved() / 2**30:.1f}",
+            )
     dt = time.time() - t0
     print(f"  {len(prompts)} gens, {n_tokens} tokens in {dt/60:.1f} min ({n_tokens/dt:.0f} tok/s)")
 
@@ -118,7 +182,10 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--model", choices=list(MODELS), required=True)
     ap.add_argument("--levels", nargs="+", choices=list(LEVELS), default=list(LEVELS))
-    ap.add_argument("--batch-size", type=int, default=16)
+    ap.add_argument("--batch-size", type=int, default=48, help="max rows per batch")
+    ap.add_argument("--batch-tokens", type=int, default=72000,
+                    help="max rows * (prompt + max_new_tokens) per batch (KV budget, ~4 GB)")
+    ap.add_argument("--prefill-chunk", type=int, default=4, help="rows per prefill forward")
     ap.add_argument("--max-new-tokens", type=int, default=1024)
     ap.add_argument("--max-ctx", type=int, default=4096, help="Qwen2.5-Math context limit")
     ap.add_argument("--limit", type=int, default=0, help="stop after N rows per level (debug)")
