@@ -1,0 +1,45 @@
+# ---- data & secrets (never commit) ----
+.env
+.env.*
+!.env.example
+# anchored with a leading slash: an unanchored `data/` would also ignore
+# src/verifier_pilot/data/, which is source code, not a dataset.
+#
+# /data/ stays ignored: 159 MB of third-party datasets, and train.csv alone is
+# 104 MB -- over GitHub's 100 MB per-file limit. scripts/prepare_data.py fetches
+# them. /outputs/ is deliberately NOT ignored: 7.3 MB of results, no file over
+# 1 MB, and the judgement records carry only ids, labels and predictions -- no
+# student code -- so they are safe to publish and useful for reproducibility.
+# /data/* rather than /data/ so a single file can be re-included below: git
+# cannot un-ignore anything inside a directory that is itself excluded.
+/data/*
+# The hand-written COJ2022 problem statements are an authored artefact, not
+# downloadable data. Condition C3 is not reproducible without them.
+!/data/coj2022_statements.json
+/runs/
+/cache/
+*.ckpt
+*.safetensors
+
+# ---- python ----
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+.ipynb_checkpoints/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# ---- os / editor ----
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# ---- this project ----
+/outputs/logs/
