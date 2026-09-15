@@ -43,3 +43,4 @@ Thumbs.db
 
 # ---- this project ----
 /outputs/logs/
+/outputs/joined/
