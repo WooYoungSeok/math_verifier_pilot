@@ -3,6 +3,7 @@
 Columns added per (level in {type, theme}) x (model in {math7b, 7b}):
     {level}_kc_label_{model}   gpt-4o-mini extracted verdict: concept_gap | slip | ambiguous
     {level}_kc_raw_{model}     the 7B model's full generation
+    {level}_kc_finish_{model}  how that generation ended: eos (complete) | length (cut at max_new_tokens)
 """
 import _bootstrap  # noqa: F401
 
@@ -21,7 +22,7 @@ LABEL_DIR = Path("outputs/labels")
 OUT_STEM = Path("outputs/kc_judgements")
 
 NEW_COLS = [
-    f"{lv}_kc_{kind}_{m}" for m in MODELS for lv in LEVELS for kind in ("label", "raw")
+    f"{lv}_kc_{kind}_{m}" for m in MODELS for lv in LEVELS for kind in ("label", "raw", "finish")
 ]
 
 
@@ -40,11 +41,12 @@ def main() -> None:
     missing = Counter()
     for m in MODELS:
         for lv in LEVELS:
-            gens = {g["session_id"]: g["generation"] for g in read_jsonl(GEN_DIR / f"{m}_{lv}.jsonl")}
+            gens = {g["session_id"]: g for g in read_jsonl(GEN_DIR / f"{m}_{lv}.jsonl")}
             labels = {g["session_id"]: g["label"] for g in read_jsonl(LABEL_DIR / f"{m}_{lv}.jsonl")}
             for sid, r in by_id.items():
                 if sid in gens:
-                    r[f"{lv}_kc_raw_{m}"] = gens[sid]
+                    r[f"{lv}_kc_raw_{m}"] = gens[sid]["generation"]
+                    r[f"{lv}_kc_finish_{m}"] = gens[sid]["finish_reason"]
                 else:
                     missing[f"{lv}_kc_raw_{m}"] += 1
                 if sid in labels:
