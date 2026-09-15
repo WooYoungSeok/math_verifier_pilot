@@ -90,7 +90,7 @@ EXTRACT_TEMPLATE = """대상 개념: "{concept}"
 
 판정문에 "최종 판정:" 줄이 있으면 그것을 우선하되, 본문과 명백히 모순되면 ambiguous로 분류하세요.
 판정문은 영어나 중국어로 쓰여 있을 수 있습니다. 판정문을 쓴 AI가 한국어 "실수"를 "real number"/"实数"로 오역하는 경우가 있으므로, 최종 판정 자리에 "real number", "实数", "simple real error", "simple mistake", "calculation error", "单纯失误" 등이 있으면 slip으로, "concept deficiency", "lack of understanding of the concept", "概念不足", "concept结索" 등이 있으면 concept_gap으로 읽으세요.
-evidence에는 분류 근거가 된 판정문의 구절을 한 문장만 그대로 인용하세요.
+evidence에는 분류 근거가 된 판정문의 구절을 한 문장만(200자 이내) 그대로 인용하세요.
 
 ## 판정문
 {generation}"""

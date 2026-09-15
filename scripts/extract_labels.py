@@ -43,7 +43,10 @@ async def classify(client: AsyncOpenAI, sem: asyncio.Semaphore, concept: str, ge
                     model=EXTRACT_MODEL,
                     messages=build_extract_messages(concept, generation),
                     response_format=Verdict,
-                    temperature=0,
+                    # Greedy first; a little temperature on retries breaks the
+                    # rare degenerate loop where the evidence string never ends.
+                    temperature=0 if attempt == 0 else 0.5,
+                    max_tokens=600,
                 )
                 v = resp.choices[0].message.parsed
                 if v is None:  # refusal / schema failure
