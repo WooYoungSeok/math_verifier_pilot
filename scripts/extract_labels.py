@@ -111,10 +111,11 @@ async def main_kt(args) -> None:
 
 
 async def main_mathedu(args) -> None:
-    from kc_judge.mathedu import API_MODELS, GENERIC_CONCEPT, OUT_DIR
+    from kc_judge.mathedu import GENERIC_CONCEPT, OUT_DIR
 
     client = AsyncOpenAI()
-    models = [args.model] if args.model else list(API_MODELS)
+    # Every judge that has generated for this set (API models and local 7Bs).
+    models = [args.model] if args.model else sorted(p.stem for p in (OUT_DIR / "gen").glob("*.jsonl"))
     for m in models:
         gen_path = OUT_DIR / "gen" / f"{m}.jsonl"
         if not gen_path.exists():

@@ -16,7 +16,7 @@ import argparse
 import pandas as pd
 
 from kc_judge.io import read_jsonl
-from kc_judge.mathedu import API_MODELS, OUT_DIR, load_balanced_ids, load_eval
+from kc_judge.mathedu import OUT_DIR, load_balanced_ids, load_eval
 
 CLASSES = ("concept_gap", "slip")
 
@@ -68,7 +68,13 @@ def evaluate(model: str, gold_rows: list[dict], balanced: set[str]) -> tuple[pd.
 
     lines = [f"## {model}", "", f"labelled rows: {len(df)} / {len(gold_rows)} (missing {missing})", ""]
     summary = []
-    for name, sub in (("balanced", df[df["balanced"]]), ("full", df), ("full, problem_match only", df[df["problem_match"]])):
+    subsets = (
+        ("balanced", df[df["balanced"]]),
+        ("balanced, problem_match only", df[df["balanced"] & df["problem_match"]]),
+        ("full", df),
+        ("full, problem_match only", df[df["problem_match"]]),
+    )
+    for name, sub in subsets:
         m = metrics(sub)
         summary.append({"model": model, "subset": name, **m})
         lines.append(f"### {name} (n={m['n']})")
@@ -105,12 +111,12 @@ def evaluate(model: str, gold_rows: list[dict], balanced: set[str]) -> tuple[pd.
 
 def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--model", choices=API_MODELS)
+    ap.add_argument("--model", help="judge name = label file stem (gpt-5.1, qwen2.5-7b-instruct, ...)")
     args = ap.parse_args()
 
     gold_rows = load_eval()
     balanced = load_balanced_ids()
-    models = [args.model] if args.model else [m for m in API_MODELS if (OUT_DIR / "labels" / f"{m}.jsonl").exists()]
+    models = [args.model] if args.model else sorted(p.stem for p in (OUT_DIR / "labels").glob("*.jsonl"))
 
     all_summary, all_lines = [], ["# MathEdu gold-label evaluation", "",
                                   f"gold rows: {len(gold_rows)} (balanced subset: {len(balanced)}, seed 42)", ""]

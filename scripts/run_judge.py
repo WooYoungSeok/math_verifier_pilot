@@ -2,9 +2,11 @@
 
     python scripts/run_judge.py --model math7b            # both levels
     python scripts/run_judge.py --model 7b --limit 20     # smoke test
+    python scripts/run_judge.py --dataset mathedu --model 7b   # gold-label check set
 
-Output: outputs/gen/{model}_{level}.jsonl, one row per session_id. Rows already
-present are skipped, so an interrupted run resumes where it stopped.
+Output: outputs/gen/{model}_{level}.jsonl, one row per session_id (or
+outputs/mathedu/gen/{model name}.jsonl, one row per uid). Rows already present
+are skipped, so an interrupted run resumes where it stopped.
 """
 import _bootstrap  # noqa: F401
 
@@ -82,21 +84,27 @@ def chunked_prefill(model, input_ids, attention_mask, chunk: int, max_new_tokens
 
 
 def run_level(tok, model, model_key: str, level: str, rows: list[dict], args) -> None:
-    out = gen_path(model_key, level)
-    done = done_ids(out)
-    todo = [r for r in rows if r["session_id"] not in done]
+    run_job(tok, model, model_key, rows, args, out=gen_path(model_key, level), key="session_id",
+            build=lambda r: build_messages(r, level), tag=f"{model_key}/{level}",
+            extra={"level": level})
+
+
+def run_job(tok, model, model_key: str, rows: list[dict], args, *, out: Path, key: str, build, tag: str,
+            extra: dict) -> None:
+    """Generate one judgement per row; `build(row)` gives the chat messages,
+    `key` names the row id field, `extra` is copied into every output row."""
+    done = done_ids(out, key=key)
+    todo = [r for r in rows if r[key] not in done]
     if args.limit:
         todo = todo[: max(0, args.limit - len(done))]
-    print(f"[{model_key}/{level}] done={len(done)} todo={len(todo)} -> {out}")
+    print(f"[{tag}] done={len(done)} todo={len(todo)} -> {out}")
     if not todo:
         return
 
     prompts = []
     for r in todo:
-        text = tok.apply_chat_template(
-            build_messages(r, level), tokenize=False, add_generation_prompt=True
-        )
-        prompts.append((r["session_id"], text, len(tok(text).input_ids)))
+        text = tok.apply_chat_template(build(r), tokenize=False, add_generation_prompt=True)
+        prompts.append((r[key], text, len(tok(text).input_ids)))
     # Length-sorted batches keep padding to a minimum.
     prompts.sort(key=lambda p: p[2])
     max_prompt = max(p[2] for p in prompts)
@@ -121,7 +129,7 @@ def run_level(tok, model, model_key: str, level: str, rows: list[dict], args) ->
     t0 = time.time()
     n_tokens = 0
     with JsonlAppender(out) as w:
-        pbar = tqdm(batches, desc=f"{model_key}/{level}")
+        pbar = tqdm(batches, desc=tag)
         for batch in pbar:
             tb = time.time()
             enc = tok(
@@ -156,9 +164,9 @@ def run_level(tok, model, model_key: str, level: str, rows: list[dict], args) ->
                 n_tokens += len(body)
                 w.write(
                     {
-                        "session_id": sid,
+                        key: sid,
                         "model": MODELS[model_key],
-                        "level": level,
+                        **extra,
                         "prompt_hash": hashlib.sha1(text.encode("utf-8")).hexdigest()[:12],
                         "prompt_tokens": n_in,
                         "gen_tokens": len(body),
@@ -180,6 +188,7 @@ def run_level(tok, model, model_key: str, level: str, rows: list[dict], args) ->
 
 def main() -> None:
     ap = argparse.ArgumentParser()
+    ap.add_argument("--dataset", choices=["kt", "mathedu"], default="kt")
     ap.add_argument("--model", choices=list(MODELS), required=True)
     ap.add_argument("--levels", nargs="+", choices=list(LEVELS), default=list(LEVELS))
     ap.add_argument("--batch-size", type=int, default=48, help="max rows per batch")
@@ -190,6 +199,17 @@ def main() -> None:
     ap.add_argument("--max-ctx", type=int, default=4096, help="Qwen2.5-Math context limit")
     ap.add_argument("--limit", type=int, default=0, help="stop after N rows per level (debug)")
     args = ap.parse_args()
+
+    if args.dataset == "mathedu":
+        from kc_judge.mathedu import OUT_DIR, load_eval
+        from kc_judge.prompts import build_mathedu_messages
+
+        rows = load_eval()
+        tok, model = load_model(MODELS[args.model])
+        name = MODELS[args.model].split("/")[-1].lower()  # e.g. qwen2.5-7b-instruct
+        run_job(tok, model, args.model, rows, args, out=OUT_DIR / "gen" / f"{name}.jsonl", key="uid",
+                build=build_mathedu_messages, tag=f"mathedu/{name}", extra={})
+        return
 
     rows = load_incorrect()
     tok, model = load_model(MODELS[args.model])
