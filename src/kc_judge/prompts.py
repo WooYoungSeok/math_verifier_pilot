@@ -101,3 +101,63 @@ def build_extract_messages(concept: str, generation: str) -> list[dict]:
         {"role": "system", "content": EXTRACT_SYSTEM},
         {"role": "user", "content": EXTRACT_TEMPLATE.format(concept=concept, generation=generation)},
     ]
+
+
+# ---------------------------------------------------------------------------
+# MathEdu (English, no named target concept) — same structure as the Korean
+# judge prompt so the API results are comparable with the 7B pipeline.
+
+MATHEDU_SYSTEM_PROMPT = (
+    "You are an expert mathematics teacher. You analyse a student's incorrect solution and decide "
+    "whether the student failed because of a wrong or missing mathematical concept or operation, "
+    "or because of a careless slip made while executing a correct method. "
+    "Here 'slip' means a careless mistake, not a real number."
+)
+
+MATHEDU_USER_TEMPLATE = """Below is a math word problem that a student answered incorrectly, together with the student's work.
+
+## Problem
+{problem}
+
+## Options
+{options}
+
+## Correct option
+{correct}
+
+## Reference solution
+{rationale}
+
+## Student's submitted answer
+{student_answer}
+
+## Student's work
+{student_process}
+
+## Instructions
+1. Compare the student's work with the reference solution step by step and identify the first point where the error occurs.
+2. Decide whether that error comes from a wrong or missing mathematical concept or operation \
+(the student set up the wrong relationship, applied the wrong operation, misunderstood what the problem asks, \
+or used an incorrect formula or method), or whether the method was correct and the student only made a careless slip \
+(an arithmetic mistake, a copying or transcription error, a dropped unit, or writing down a different number than the one computed).
+3. If the student's work is empty or too short to tell, or if the two causes cannot be clearly separated, answer "undecidable".
+4. Write a concise analysis, then on the last line write exactly one of the following:
+
+Final verdict: concept gap
+Final verdict: slip
+Final verdict: undecidable"""
+
+
+def build_mathedu_messages(row: dict) -> list[dict]:
+    user = MATHEDU_USER_TEMPLATE.format(
+        problem=row["problem"].strip(),
+        options=row["options"].strip() or "(open answer)",
+        correct=row["correct"].strip(),
+        rationale=row["rationale"].strip().strip('"'),
+        student_answer=row["student_answer"].strip() or "(not recorded)",
+        student_process=row["student_process"].strip() or "(no work shown)",
+    )
+    return [
+        {"role": "system", "content": MATHEDU_SYSTEM_PROMPT},
+        {"role": "user", "content": user},
+    ]

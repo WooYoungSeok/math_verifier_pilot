@@ -50,3 +50,23 @@ One row per session_id with the judge generation and the extracted label side by
 substring check), `evidence_in_generation_normalized` (ignoring LaTeX/space/case) and
 `generation_truncated`. Rows with `generation_truncated=True` and no matching evidence are the
 ones where the label was most likely inferred from an unfinished judgement.
+
+## Supplementary: gold-label check on MathEdu
+
+KT-PSP-25 has no ground truth for *why* a student failed. `data/mathedu_*.json` (teacher-reviewed
+student work on MathQA problems) does: we keep wrong answers with exactly one teacher error whose type
+maps onto our labels — `Wrong mathematical operation/concept` → `concept_gap`, `Arithmetical error` /
+`Careless error` → `slip` (438 / 101 rows over train+val+test) — and run the same judge → extractor
+pipeline with API judges (`gpt-5.4-mini`, `gpt-5.1`, `temperature=1`, no reasoning effort).
+Problem text comes from `data/train.json` (`id < 29837`) and `data/test.json` (`id − 34312`).
+
+```
+python scripts/prepare_mathedu.py                 # -> data/mathedu_eval.jsonl, outputs/mathedu/balanced_ids.json (seed 42)
+python scripts/run_api_judge.py --model gpt-5.4-mini
+python scripts/run_api_judge.py --model gpt-5.1   # -> outputs/mathedu/gen/{model}.jsonl
+python scripts/extract_labels.py --dataset mathedu  # -> outputs/mathedu/labels/{model}.jsonl
+python scripts/eval_mathedu.py                    # -> outputs/mathedu/summary.md, eval_{model}.csv
+```
+
+`summary.md` reports accuracy, balanced accuracy, macro-F1 (ambiguous counts as wrong), coverage and
+per-error-type recall on the balanced subset (101 + 101) and on all 539 rows.
