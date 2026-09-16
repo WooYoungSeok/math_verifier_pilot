@@ -439,3 +439,6 @@ Arithmetical error                     60  0.583333   0.066667
 Careless error                         21  0.476190   0.095238
 Wrong mathematical operation/concept  322  0.791925   0.009317
 ```
+
+
+wrote outputs\mathedu\summary.md and eval_{model}.csv
