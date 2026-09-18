@@ -331,7 +331,7 @@
 {"session_id": 196227, "model": "gpt-5.4-mini", "extractor": "gpt-4o-mini", "finish_reason": "eos", "label": "slip", "evidence": "따라서 개념을 몰라서 틀린 것이 아니라 **계산 실수**로 판단됩니다."}
 {"session_id": 717260, "model": "gpt-5.4-mini", "extractor": "gpt-4o-mini", "finish_reason": "eos", "label": "slip", "evidence": "학생이 51로 적은 것은 단순 산술 실수입니다."}
 {"session_id": 882494, "model": "gpt-5.4-mini", "extractor": "gpt-4o-mini", "finish_reason": "eos", "label": "slip", "evidence": "다만 계산 결과 128800은 여섯 자리 수이므로, 최종 답을 ① 5로 고른 것은 자릿수 판별을 잘못한 것입니다."}
-{"session_id": 511060, "model": "gpt-5.4-mini", "extractor": "gpt-4o-mini", "finish_reason": "eos", "label": "slip", "evidence": "", "note": "override: none -> slip (work correct, student answer not recorded)"}
+{"session_id": 511060, "model": "gpt-5.4-mini", "extractor": "gpt-4o-mini", "finish_reason": "eos", "label": "slip", "evidence": "", "note": "override: none -> slip (work correct, student answer not recorded)", "label_original": "none"}
 {"session_id": 195256, "model": "gpt-5.4-mini", "extractor": "gpt-4o-mini", "finish_reason": "eos", "label": "slip", "evidence": "이는 개념을 몰라서가 아니라 계산/정리 과정이 미완성된 것으로 보는 것이 타당합니다."}
 {"session_id": 958247, "model": "gpt-5.4-mini", "extractor": "gpt-4o-mini", "finish_reason": "eos", "label": "ambiguous", "evidence": "대상 개념( x^3=1,\n x^3=-1의 허근의 성질)을 몰라서 틀렸는지, 아니면 단순히 풀이를 생략했는지 판단할 수 없습니다."}
 {"session_id": 261111, "model": "gpt-5.4-mini", "extractor": "gpt-4o-mini", "finish_reason": "eos", "label": "slip", "evidence": "즉, 개념을 몰라서 틀린 것이 아니라 마지막 값 계산 또는 답 선택에서 실수한 경우입니다."}
@@ -596,7 +596,7 @@
 {"session_id": 750368, "model": "gpt-5.4-mini", "extractor": "gpt-4o-mini", "finish_reason": "eos", "label": "slip", "evidence": "즉, 개념 부족이 아니라 **마지막 계산/답안 작성 누락**에 해당합니다."}
 {"session_id": 331894, "model": "gpt-5.4-mini", "extractor": "gpt-4o-mini", "finish_reason": "eos", "label": "concept_gap", "evidence": "즉, **실근의 부호를 판정할 때 필요한 조건을 완전하게 적용하지 못한 것**입니다."}
 {"session_id": 360500, "model": "gpt-5.4-mini", "extractor": "gpt-4o-mini", "finish_reason": "eos", "label": "slip", "evidence": "그러나 이는 개념을 몰라서가 아니라 **마무리 단계의 실수/누락**로 보는 것이 타당합니다."}
-{"session_id": 825826, "model": "gpt-5.4-mini", "extractor": "gpt-4o-mini", "finish_reason": "eos", "label": "slip", "evidence": "", "note": "override: none -> slip (work correct, student answer not recorded)"}
+{"session_id": 825826, "model": "gpt-5.4-mini", "extractor": "gpt-4o-mini", "finish_reason": "eos", "label": "slip", "evidence": "", "note": "override: none -> slip (work correct, student answer not recorded)", "label_original": "none"}
 {"session_id": 646608, "model": "gpt-5.4-mini", "extractor": "gpt-4o-mini", "finish_reason": "eos", "label": "concept_gap", "evidence": "학생은 이 핵심 조건을 적용하지 못해 k의 범위를 [-12,4]로 잘못 넓게 잡았습니다."}
 {"session_id": 334351, "model": "gpt-5.4-mini", "extractor": "gpt-4o-mini", "finish_reason": "eos", "label": "slip", "evidence": "즉, 문제의 핵심 개념을 몰라서 틀렸다기보다, 조건들을 동시에 만족시키는 범위를 구하는 과정에서 공통부분을 제대로 정리하지 못한 계산/정리 실수로 보는 것이 적절합니다."}
 {"session_id": 907173, "model": "gpt-5.4-mini", "extractor": "gpt-4o-mini", "finish_reason": "eos", "label": "slip", "evidence": "따라서 이는 개념을 몰라서가 아니라, 계산 결과를 잘못 적은 **사소한 실수**로 볼 수 있습니다."}
@@ -1072,7 +1072,7 @@
 {"session_id": 160530, "model": "gpt-5.4-mini", "extractor": "gpt-4o-mini", "finish_reason": "eos", "label": "concept_gap", "evidence": "원과 직선이 접할 때는 중심에서 직선까지의 거리가 반지름과 같다는 개념 및 그 활용을 제대로 이해하지 못한 것으로 판단됩니다."}
 {"session_id": 705096, "model": "gpt-5.4-mini", "extractor": "gpt-4o-mini", "finish_reason": "eos", "label": "slip", "evidence": "즉, 개념을 몰라서 틀린 것이 아니라 마지막 합 계산을 잘못한 단순 실수입니다."}
 {"session_id": 550405, "model": "gpt-5.4-mini", "extractor": "gpt-4o-mini", "finish_reason": "eos", "label": "concept_gap", "evidence": "학생은 **명제 p\\to q가 참이 되는 조건이 “전건 집합이 후건 집합에 포함”이라는 점**, 그리고 **R\\subset(Q-P)에서 어떤 명제가 따라오는지**를 제대로 구분하지 못한 것으로 보입니다."}
-{"session_id": 130558, "model": "gpt-5.4-mini", "extractor": "gpt-4o-mini", "finish_reason": "eos", "label": "slip", "evidence": "", "note": "override: none -> slip (work correct, student answer not recorded)"}
+{"session_id": 130558, "model": "gpt-5.4-mini", "extractor": "gpt-4o-mini", "finish_reason": "eos", "label": "slip", "evidence": "", "note": "override: none -> slip (work correct, student answer not recorded)", "label_original": "none"}
 {"session_id": 908526, "model": "gpt-5.4-mini", "extractor": "gpt-4o-mini", "finish_reason": "eos", "label": "slip", "evidence": "학생은 최종 답을 쓰는 부분에서 a^2+b^2를 계산해야 하는데도 정답인 40과 전혀 다른 171을 제출했습니다."}
 {"session_id": 581372, "model": "gpt-5.4-mini", "extractor": "gpt-4o-mini", "finish_reason": "eos", "label": "slip", "evidence": "다만 그 다음 계산에서 ... 일의 자리 계산을 틀린 것으로 보입니다."}
 {"session_id": 913036, "model": "gpt-5.4-mini", "extractor": "gpt-4o-mini", "finish_reason": "eos", "label": "slip", "evidence": "이는 개념을 몰라서가 아니라 최종 합산에서의 단순 계산 실수로 보입니다."}
@@ -1667,7 +1667,7 @@
 {"session_id": 740179, "model": "gpt-5.4-mini", "extractor": "gpt-4o-mini", "finish_reason": "eos", "label": "concept_gap", "evidence": "몫을 구하는 데 필요한 나머지정리의 적용 방법을 이해하지 못한 것으로 보입니다."}
 {"session_id": 673017, "model": "gpt-5.4-mini", "extractor": "gpt-4o-mini", "finish_reason": "eos", "label": "slip", "evidence": "따라서 개념을 몰라서 틀렸다기보다, 계산을 끝내지 못한 실수입니다."}
 {"session_id": 467887, "model": "gpt-5.4-mini", "extractor": "gpt-4o-mini", "finish_reason": "eos", "label": "slip", "evidence": "즉, 개념 부족이 아니라 단순 계산 실수입니다."}
-{"session_id": 781148, "model": "gpt-5.4-mini", "extractor": "gpt-4o-mini", "finish_reason": "eos", "label": "slip", "evidence": "", "note": "override: none -> slip (work correct, student answer not recorded)"}
+{"session_id": 781148, "model": "gpt-5.4-mini", "extractor": "gpt-4o-mini", "finish_reason": "eos", "label": "slip", "evidence": "", "note": "override: none -> slip (work correct, student answer not recorded)", "label_original": "none"}
 {"session_id": 125847, "model": "gpt-5.4-mini", "extractor": "gpt-4o-mini", "finish_reason": "eos", "label": "concept_gap", "evidence": "몫의 계수합 조건을 이용해 미지수 a를 구하는 절차를 몰라서 생긴 오류로 보는 것이 맞습니다."}
 {"session_id": 934387, "model": "gpt-5.4-mini", "extractor": "gpt-4o-mini", "finish_reason": "eos", "label": "slip", "evidence": "즉, 개념을 몰라서 틀린 것이 아니라 정답을 적는 과정에서 답안 제출이 잘못되었거나, 풀이 결과와 제출 답이 일치하지 않은 경우로 보입니다."}
 {"session_id": 361828, "model": "gpt-5.4-mini", "extractor": "gpt-4o-mini", "finish_reason": "eos", "label": "slip", "evidence": "즉, 개념 자체는 거의 알고 있으나, **나머지정리로 몫 Q(x)를 x-1로 나눈 나머지가 Q(1)이라는 점을 적용하지 못한 계산/판단 실수**입니다."}
@@ -1809,7 +1809,7 @@
 {"session_id": 685150, "model": "gpt-5.4-mini", "extractor": "gpt-4o-mini", "finish_reason": "eos", "label": "concept_gap", "evidence": "학생은 그 절차를 적용하지 못하고 있습니다."}
 {"session_id": 143382, "model": "gpt-5.4-mini", "extractor": "gpt-4o-mini", "finish_reason": "eos", "label": "slip", "evidence": "즉, 개념을 몰라서 틀린 것이 아니라 **연립방정식 계산 실수**로 보입니다."}
 {"session_id": 215067, "model": "gpt-5.4-mini", "extractor": "gpt-4o-mini", "finish_reason": "eos", "label": "concept_gap", "evidence": "이 문제의 핵심인 **삼차식으로 나눈 나머지는 이차식이며, 서로 다른 세 실근에서의 값을 이용해 나머지를 정한다**는 개념을 몰라서 틀린 경우입니다."}
-{"session_id": 504851, "model": "gpt-5.4-mini", "extractor": "gpt-4o-mini", "finish_reason": "eos", "label": "slip", "evidence": "", "note": "override: none -> slip (work correct, student answer not recorded)"}
+{"session_id": 504851, "model": "gpt-5.4-mini", "extractor": "gpt-4o-mini", "finish_reason": "eos", "label": "slip", "evidence": "", "note": "override: none -> slip (work correct, student answer not recorded)", "label_original": "none"}
 {"session_id": 396053, "model": "gpt-5.4-mini", "extractor": "gpt-4o-mini", "finish_reason": "eos", "label": "slip", "evidence": "이는 개념을 몰라서 생긴 오류가 아니라, 정답 계산은 맞았으나 답을 잘못 고른 단순 실수입니다."}
 {"session_id": 724780, "model": "gpt-5.4-mini", "extractor": "gpt-4o-mini", "finish_reason": "eos", "label": "slip", "evidence": "즉, 개념을 몰라서 틀렸다기보다 계산한 값과 선택한 보기가 일치하지 않은 단순 실수로 보는 것이 타당합니다."}
 {"session_id": 279571, "model": "gpt-5.4-mini", "extractor": "gpt-4o-mini", "finish_reason": "eos", "label": "concept_gap", "evidence": "중근을 포함한 삼차식으로 나눈 나머지의 구하는 방법 자체를 모르고 있는 경우입니다."}
@@ -2270,7 +2270,7 @@
 {"session_id": 404935, "model": "gpt-5.4-mini", "extractor": "gpt-4o-mini", "finish_reason": "eos", "label": "ambiguous", "evidence": "따라서 단순 실수로 단정하기도 어렵고, 풀이가 너무 짧아 오류 원인을 정확히 특정하기도 어렵습니다."}
 {"session_id": 264072, "model": "gpt-5.4-mini", "extractor": "gpt-4o-mini", "finish_reason": "eos", "label": "slip", "evidence": "다만 제시한 답은 ①, ②인데, 실제 인수는 ⑤ \\(x+3-i\\)입니다. 따라서 이는 **인수는 맞게 구했지만 보기 번호를 잘못 고른 단순 실수**입니다."}
 {"session_id": 277970, "model": "gpt-5.4-mini", "extractor": "gpt-4o-mini", "finish_reason": "eos", "label": "concept_gap", "evidence": "같은 거리에 있는 점의 조건을 적용하는 개념을 몰라서 생긴 오류입니다."}
-{"session_id": 851774, "model": "gpt-5.4-mini", "extractor": "gpt-4o-mini", "finish_reason": "eos", "label": "slip", "evidence": "", "note": "override: none -> slip (work correct, student answer not recorded)"}
+{"session_id": 851774, "model": "gpt-5.4-mini", "extractor": "gpt-4o-mini", "finish_reason": "eos", "label": "slip", "evidence": "", "note": "override: none -> slip (work correct, student answer not recorded)", "label_original": "none"}
 {"session_id": 141998, "model": "gpt-5.4-mini", "extractor": "gpt-4o-mini", "finish_reason": "eos", "label": "concept_gap", "evidence": "**\\(x\\)축 위의 점이라는 조건을 이용해 변수 하나를 0으로 두고 최솟값 문제로 바꾸는 개념**을 적용하지 못했습니다."}
 {"session_id": 520172, "model": "gpt-5.4-mini", "extractor": "gpt-4o-mini", "finish_reason": "eos", "label": "slip", "evidence": "즉, 개념을 몰라서 틀린 것이 아니라 **구한 두 해의 합을 구하지 않고 해를 나열한 실수**입니다."}
 {"session_id": 226559, "model": "gpt-5.4-mini", "extractor": "gpt-4o-mini", "finish_reason": "eos", "label": "ambiguous", "evidence": "즉, 대상 개념을 몰라서 틀렸는지, 아니면 이후 계산을 하다 멈춘 것인지 판단할 수 없습니다."}
@@ -2494,7 +2494,7 @@
 {"session_id": 945659, "model": "gpt-5.4-mini", "extractor": "gpt-4o-mini", "finish_reason": "eos", "label": "slip", "evidence": "이는 개념 부족이 아니라 **답을 잘못 고른 단순 실수**입니다."}
 {"session_id": 112677, "model": "gpt-5.4-mini", "extractor": "gpt-4o-mini", "finish_reason": "eos", "label": "slip", "evidence": "제출한 풀이에서 나타난 문제는 전개 과정의 계산 확인이 부족한 것으로 보입니다."}
 {"session_id": 886112, "model": "gpt-5.4-mini", "extractor": "gpt-4o-mini", "finish_reason": "eos", "label": "slip", "evidence": "다만 최종 합을\n\\[-20+19i\\]까지 구해 놓고도 \\[a+b\\]를 계산해야 하는데, 이를 \\[1\\]로 잘못 적었습니다."}
-{"session_id": 313610, "model": "gpt-5.4-mini", "extractor": "gpt-4o-mini", "finish_reason": "eos", "label": "slip", "evidence": "", "note": "override: none -> slip (work correct, student answer not recorded)"}
+{"session_id": 313610, "model": "gpt-5.4-mini", "extractor": "gpt-4o-mini", "finish_reason": "eos", "label": "slip", "evidence": "", "note": "override: none -> slip (work correct, student answer not recorded)", "label_original": "none"}
 {"session_id": 688767, "model": "gpt-5.4-mini", "extractor": "gpt-4o-mini", "finish_reason": "eos", "label": "slip", "evidence": "이는 개념을 몰라서가 아니라 최종 계산 또는 입력 실수로 보입니다."}
 {"session_id": 209261, "model": "gpt-5.4-mini", "extractor": "gpt-4o-mini", "finish_reason": "eos", "label": "slip", "evidence": "학생은 중간에 2x^2-13까지는 썼지만, 그 뒤 계산을 적는 과정이 다소 흐트러져 있어 보입니다."}
 {"session_id": 730517, "model": "gpt-5.4-mini", "extractor": "gpt-4o-mini", "finish_reason": "eos", "label": "slip", "evidence": "즉, 개념을 몰라서 틀린 것은 아니며 결과도 맞습니다."}
@@ -2586,7 +2586,7 @@
 {"session_id": 824178, "model": "gpt-5.4-mini", "extractor": "gpt-4o-mini", "finish_reason": "eos", "label": "slip", "evidence": "실제 오답은 **마지막 산출값을 잘못 적은 단순 실수**로 보는 것이 타당합니다."}
 {"session_id": 865877, "model": "gpt-5.4-mini", "extractor": "gpt-4o-mini", "finish_reason": "eos", "label": "concept_gap", "evidence": "즉, 도형의 각 모서리 길이를 인수분해로 정확히 찾아야 하는 개념을 충분히 이해하지 못한 오류입니다."}
 {"session_id": 873285, "model": "gpt-5.4-mini", "extractor": "gpt-4o-mini", "finish_reason": "eos", "label": "slip", "evidence": "다만 마지막 계산에서... 미완성된 상태입니다. 문제의 핵심 개념을 몰라서 틀렸다기보다, 전개·정리 및 계산을 마무리하지 못한 실수로 보는 것이 타당합니다."}
-{"session_id": 131806, "model": "gpt-5.4-mini", "extractor": "gpt-4o-mini", "finish_reason": "eos", "label": "slip", "evidence": "", "note": "override: none -> slip (work correct, student answer not recorded)"}
+{"session_id": 131806, "model": "gpt-5.4-mini", "extractor": "gpt-4o-mini", "finish_reason": "eos", "label": "slip", "evidence": "", "note": "override: none -> slip (work correct, student answer not recorded)", "label_original": "none"}
 {"session_id": 826125, "model": "gpt-5.4-mini", "extractor": "gpt-4o-mini", "finish_reason": "eos", "label": "concept_gap", "evidence": "학생은 ... 핵심 개념을 적용하지 못했습니다."}
 {"session_id": 820929, "model": "gpt-5.4-mini", "extractor": "gpt-4o-mini", "finish_reason": "eos", "label": "concept_gap", "evidence": "문제의 핵심 개념인 “부피식을 인수분해하여 반지름과 높이를 읽어내는 방법”을 모르고 있는 것으로 판단됩니다."}
 {"session_id": 863613, "model": "gpt-5.4-mini", "extractor": "gpt-4o-mini", "finish_reason": "eos", "label": "slip", "evidence": "즉, 개념 이해의 문제라기보다 **정답 선택/입력 실수**입니다."}
@@ -2710,7 +2710,7 @@
 {"session_id": 329387, "model": "gpt-5.4-mini", "extractor": "gpt-4o-mini", "finish_reason": "eos", "label": "concept_gap", "evidence": "인수분해를 통해 반지름과 높이를 찾아내는 핵심 개념 자체는 사용하지 못한 것으로 보입니다."}
 {"session_id": 181406, "model": "gpt-5.4-mini", "extractor": "gpt-4o-mini", "finish_reason": "eos", "label": "ambiguous", "evidence": "따라서 대상 개념인 **인수분해의 도형에의 활용**을 몰라서 틀렸는지, 아니면 단순히 풀이를 적지 않았는지 판단할 수 없습니다."}
 {"session_id": 544726, "model": "gpt-5.4-mini", "extractor": "gpt-4o-mini", "finish_reason": "eos", "label": "slip", "evidence": "이는 개념을 몰라서라기보다, 인수분해 조건을 적용한 뒤의 마무리 계산/서술이 누락된 경우로 보는 것이 적절합니다."}
-{"session_id": 322910, "model": "gpt-5.4-mini", "extractor": "gpt-4o-mini", "finish_reason": "eos", "label": "slip", "evidence": "", "note": "override: none -> slip (work correct, student answer not recorded)"}
+{"session_id": 322910, "model": "gpt-5.4-mini", "extractor": "gpt-4o-mini", "finish_reason": "eos", "label": "slip", "evidence": "", "note": "override: none -> slip (work correct, student answer not recorded)", "label_original": "none"}
 {"session_id": 290662, "model": "gpt-5.4-mini", "extractor": "gpt-4o-mini", "finish_reason": "eos", "label": "concept_gap", "evidence": "대상 개념인 “계수가 대칭인 사차식의 인수분해”의 절차를 제대로 이해하지 못한 경우로 판단됩니다."}
 {"session_id": 900697, "model": "gpt-5.4-mini", "extractor": "gpt-4o-mini", "finish_reason": "eos", "label": "slip", "evidence": "따라서 이는 개념을 몰라서 틀렸다기보다, 겉넓이 공식 적용 과정에서 항을 누락한 계산 실수입니다."}
 {"session_id": 432377, "model": "gpt-5.4-mini", "extractor": "gpt-4o-mini", "finish_reason": "eos", "label": "slip", "evidence": "즉, 개념 부족이 아니라 계산/정리 과정의 실수입니다."}
@@ -4455,7 +4455,7 @@
 {"session_id": 704587, "model": "gpt-5.4-mini", "extractor": "gpt-4o-mini", "finish_reason": "eos", "label": "concept_gap", "evidence": "즉, 단순 계산 실수라기보다 복잡한 수를 인수분해 형태로 바꾸는 방법 자체를 제대로 적용하지 못한 것으로 보입니다."}
 {"session_id": 231437, "model": "gpt-5.4-mini", "extractor": "gpt-4o-mini", "finish_reason": "eos", "label": "slip", "evidence": "이 경우는 개념 부족보다는 풀이를 아주 간단히 적은 경우로 보는 것이 타당합니다."}
 {"session_id": 125888, "model": "gpt-5.4-mini", "extractor": "gpt-4o-mini", "finish_reason": "eos", "label": "slip", "evidence": "학생은 ... 잘못 답을 선택한 **실수**로 보입니다."}
-{"session_id": 772846, "model": "gpt-5.4-mini", "extractor": "gpt-4o-mini", "finish_reason": "eos", "label": "slip", "evidence": "", "note": "override: none -> slip (work correct, student answer not recorded)"}
+{"session_id": 772846, "model": "gpt-5.4-mini", "extractor": "gpt-4o-mini", "finish_reason": "eos", "label": "slip", "evidence": "", "note": "override: none -> slip (work correct, student answer not recorded)", "label_original": "none"}
 {"session_id": 444739, "model": "gpt-5.4-mini", "extractor": "gpt-4o-mini", "finish_reason": "eos", "label": "slip", "evidence": "학생은 핵심 개념 자체는 알고 있습니다."}
 {"session_id": 389370, "model": "gpt-5.4-mini", "extractor": "gpt-4o-mini", "finish_reason": "eos", "label": "ambiguous", "evidence": "즉 개념을 몰라서 틀렸다기보다, 풀이가 중간에서 끝난 것으로 보이며 정답 선택/마무리 과정이 누락된 상태입니다."}
 {"session_id": 527694, "model": "gpt-5.4-mini", "extractor": "gpt-4o-mini", "finish_reason": "eos", "label": "slip", "evidence": "학생이 적은 답은 634이므로, 개념을 몰라서가 아니라 계산/답 입력 과정의 실수로 보입니다."}

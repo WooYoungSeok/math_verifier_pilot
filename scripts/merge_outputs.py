@@ -5,13 +5,15 @@ Columns added per (level in {type, theme}) x (model in {math7b, 7b}):
     {level}_kc_raw_{model}     the 7B model's full generation
     {level}_kc_finish_{model}  how that generation ended: eos (complete) | length (cut at max_new_tokens)
 
-Each API judge in outputs/kt_api adds two more, against curriculum_type_title only:
-    type_kc_label_{judge}      concept_gap | slip | ambiguous | none
+Each API judge in outputs/kt_api adds three more, against curriculum_type_title only:
+    type_kc_label_{judge}      concept_gap | slip | ambiguous | none, after any override
+    type_kc_verdict_{judge}    the judge's own verdict line, before extraction or override
     type_kc_raw_{judge}        that judge's full judgement
 """
 import _bootstrap  # noqa: F401
 
 import argparse
+import re
 from collections import Counter
 from pathlib import Path
 
@@ -30,6 +32,15 @@ NEW_COLS = [
     f"{lv}_kc_{kind}_{m}" for m in MODELS for lv in LEVELS for kind in ("label", "raw", "finish")
 ]
 LABEL_SET = [x for x in KT_LABELS if x != "none"]
+
+
+VERDICT_RE = re.compile(r"판정:\s*(concept_gap|slip|ambiguous)")
+
+
+def verdict_of(generation: str) -> str:
+    """The judge's own verdict line, so an overridden label never hides it."""
+    found = VERDICT_RE.findall(generation)
+    return found[-1] if found else ""
 
 
 def api_judges() -> list[str]:
@@ -58,7 +69,8 @@ def main() -> None:
     judges = api_judges()
     for r in by_id.values():
         for j in judges:
-            r[f"type_kc_label_{short(j)}"] = r[f"type_kc_raw_{short(j)}"] = ""
+            for kind in ("label", "verdict", "raw"):
+                r[f"type_kc_{kind}_{short(j)}"] = ""
 
     missing = Counter()
     for j in judges:
@@ -66,6 +78,7 @@ def main() -> None:
         labels = {g["session_id"]: g["label"] for g in read_jsonl(KT_OUT_DIR / "labels" / f"{j}.jsonl")}
         for sid, r in by_id.items():
             r[f"type_kc_raw_{short(j)}"] = gens.get(sid, "")
+            r[f"type_kc_verdict_{short(j)}"] = verdict_of(gens.get(sid, ""))
             r[f"type_kc_label_{short(j)}"] = labels.get(sid, "")
             if sid not in gens:
                 missing[f"type_kc_raw_{short(j)}"] += 1
@@ -104,8 +117,9 @@ def main() -> None:
             col = f"{lv}_kc_label_{m}"
             print(f"  {col:28s}", dict(Counter(df[col])))
     for j in judges:
-        col = f"type_kc_label_{short(j)}"
-        print(f"  {col:28s}", dict(Counter(df[col])))
+        for kind in ("label", "verdict"):
+            col = f"type_kc_{kind}_{short(j)}"
+            print(f"  {col:28s}", dict(Counter(df[col])))
     print("\nagreement between models (rows where both labelled)")
     for lv in LEVELS:
         a, b = df[f"{lv}_kc_label_math7b"], df[f"{lv}_kc_label_7b"]

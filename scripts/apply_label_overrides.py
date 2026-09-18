@@ -5,7 +5,10 @@ Re-runnable, and meant to be re-run after any re-extraction.
 Rule (2026-09-18): a `none` label on a row whose student answer was never
 recorded becomes `slip`. In those rows the judge finds the written work
 correct, so the only thing that can have gone wrong is the submission itself
-— a slip by our definition. `none` is kept where an answer *was* recorded
+— a slip by our definition. The extractor's original label is kept in
+`label_original`, and the judge's own verdict line survives untouched in the
+generation (merge_outputs.py surfaces it as type_kc_verdict_{judge}).
+`none` is kept where an answer *was* recorded
 (e.g. 917440 submitted "-48." against the answer -48), since there the
 mismatch is not simply a missing response.
 """
@@ -33,7 +36,11 @@ def main() -> None:
     rows = list(read_jsonl(path))
     changed = Counter()
     for r in rows:
-        if r["label"] == "none" and not answered[r["session_id"]]:
+        # Re-matching rows that already carry the note keeps the script
+        # idempotent and makes sure label_original is always recorded.
+        already = r.get("note") == OVERRIDE_NOTE
+        if (r["label"] == "none" or already) and not answered[r["session_id"]]:
+            r["label_original"] = r.get("label_original", "none" if already else r["label"])
             r["label"] = "slip"
             r["note"] = OVERRIDE_NOTE
             changed[r["session_id"]] += 1
