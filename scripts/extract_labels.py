@@ -3,6 +3,7 @@
     python scripts/extract_labels.py                    # all model x level combos
     python scripts/extract_labels.py --model 7b --level type
     python scripts/extract_labels.py --dataset mathedu  # API-judge generations (outputs/mathedu/gen)
+    python scripts/extract_labels.py --dataset kt_api   # KT judgements from an API model (4 labels)
 
 Output: outputs/labels/{model}_{level}.jsonl. Resumable: session_ids already
 labelled are skipped.
@@ -22,7 +23,7 @@ from tqdm import tqdm
 from kc_judge import LABELS, LEVELS, MODELS
 from kc_judge.data import load_incorrect
 from kc_judge.io import JsonlAppender, done_ids, read_jsonl
-from kc_judge.prompts import build_extract_messages
+from kc_judge.prompts import build_extract_messages, build_kt_extract_messages
 
 GEN_DIR = Path("outputs/gen")
 LABEL_DIR = Path("outputs/labels")
@@ -34,16 +35,26 @@ class Verdict(BaseModel):
     evidence: str
 
 
-async def classify(client: AsyncOpenAI, sem: asyncio.Semaphore, concept: str, generation: str) -> dict:
+class KtVerdict(BaseModel):
+    """KT API judgements add `none` for verdicts that cannot be read off with
+    confidence, so an unreadable judgement is not silently called ambiguous."""
+
+    label: Literal["concept_gap", "slip", "ambiguous", "none"]
+    evidence: str
+
+
+async def classify(client: AsyncOpenAI, sem: asyncio.Semaphore, concept: str, generation: str,
+                   schema=Verdict, build=build_extract_messages) -> dict:
+    fallback = "none" if schema is KtVerdict else "ambiguous"
     if not generation.strip():
-        return {"label": "ambiguous", "evidence": "", "note": "empty generation"}
+        return {"label": fallback, "evidence": "", "note": "empty generation"}
     async with sem:
         for attempt in range(6):
             try:
                 resp = await client.chat.completions.parse(
                     model=EXTRACT_MODEL,
-                    messages=build_extract_messages(concept, generation),
-                    response_format=Verdict,
+                    messages=build(concept, generation),
+                    response_format=schema,
                     # Greedy first; a little temperature on retries breaks the
                     # rare degenerate loop where the evidence string never ends.
                     temperature=0 if attempt == 0 else 0.5,
@@ -51,15 +62,16 @@ async def classify(client: AsyncOpenAI, sem: asyncio.Semaphore, concept: str, ge
                 )
                 v = resp.choices[0].message.parsed
                 if v is None:  # refusal / schema failure
-                    return {"label": "ambiguous", "evidence": "", "note": "no parsed output"}
+                    return {"label": fallback, "evidence": "", "note": "no parsed output"}
                 return {"label": v.label, "evidence": v.evidence}
             except Exception as e:  # rate limit, transient network
                 if attempt == 5:
-                    return {"label": "ambiguous", "evidence": "", "note": f"error: {e!r}"}
+                    return {"label": fallback, "evidence": "", "note": f"error: {e!r}"}
                 await asyncio.sleep(2**attempt + random.random())
 
 
-async def run_extraction(client: AsyncOpenAI, gen_path: Path, out: Path, concept_of, key: str, tag: str, args) -> None:
+async def run_extraction(client: AsyncOpenAI, gen_path: Path, out: Path, concept_of, key: str, tag: str, args,
+                         schema=Verdict, build=build_extract_messages) -> None:
     """Label every generation in gen_path that is not yet in out.
     concept_of(gen_row) -> the concept name to put in the extractor prompt."""
     gens = list(read_jsonl(gen_path))
@@ -74,7 +86,7 @@ async def run_extraction(client: AsyncOpenAI, gen_path: Path, out: Path, concept
     sem = asyncio.Semaphore(args.concurrency)
 
     async def one(g):
-        v = await classify(client, sem, concept_of(g), g["generation"])
+        v = await classify(client, sem, concept_of(g), g["generation"], schema, build)
         return {
             key: g[key],
             "model": g["model"],
@@ -127,16 +139,39 @@ async def main_mathedu(args) -> None:
         )
 
 
+async def main_kt_api(args) -> None:
+    """Extract the four-label verdict from KT judgements written by an API model."""
+    from kc_judge import LEVELS
+    from kc_judge.kt_api import KT_OUT_DIR
+
+    concept_by_id = {r["session_id"]: r for r in load_incorrect()}
+    field = LEVELS["type"]
+    client = AsyncOpenAI()
+    models = [args.model] if args.model else sorted(p.stem for p in (KT_OUT_DIR / "gen").glob("*.jsonl"))
+    for m in models:
+        gen_path = KT_OUT_DIR / "gen" / f"{m}.jsonl"
+        if not gen_path.exists():
+            print(f"[{m}] no generations yet, skipping")
+            continue
+        await run_extraction(
+            client, gen_path, KT_OUT_DIR / "labels" / f"{m}.jsonl",
+            lambda g: concept_by_id[g["session_id"]][field],
+            "session_id", f"kt_api/{m}", args, KtVerdict, build_kt_extract_messages,
+        )
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--dataset", choices=["kt", "mathedu"], default="kt",
-                    help="kt: outputs/gen/{model}_{level}; mathedu: outputs/mathedu/gen/{api model}")
+    ap.add_argument("--dataset", choices=["kt", "mathedu", "kt_api"], default="kt",
+                    help="kt: outputs/gen/{model}_{level}; mathedu: outputs/mathedu/gen/{api model}; "
+                         "kt_api: outputs/kt_api/gen/{api model}")
     ap.add_argument("--model", help="kt: math7b|7b; mathedu: gpt-5.4-mini|gpt-5.1")
     ap.add_argument("--level", choices=list(LEVELS))
     ap.add_argument("--concurrency", type=int, default=16)
     ap.add_argument("--limit", type=int, default=0)
     args = ap.parse_args()
-    asyncio.run(main_mathedu(args) if args.dataset == "mathedu" else main_kt(args))
+    runner = {"mathedu": main_mathedu, "kt_api": main_kt_api, "kt": main_kt}[args.dataset]
+    asyncio.run(runner(args))
 
 
 if __name__ == "__main__":

@@ -1,10 +1,12 @@
-"""Judge MathEdu rows with an OpenAI API model (concept gap vs slip).
+"""Judge with an OpenAI API model: MathEdu (concept gap vs slip) or KT-PSP-25
+(concept_gap / slip / ambiguous against curriculum_type_title).
 
     python scripts/run_api_judge.py --model gpt-5.4-mini --limit 5
-    python scripts/run_api_judge.py --model gpt-5.1
+    python scripts/run_api_judge.py --dataset kt --model gpt-5.4-mini
 
-Output: outputs/mathedu/gen/{model}.jsonl, same shape as run_judge.py rows
-(uid instead of session_id). Resumable: uids already present are skipped.
+Output: outputs/mathedu/gen/{model}.jsonl (keyed by uid) or
+outputs/kt_api/gen/{model}.jsonl (keyed by session_id), same row shape as
+run_judge.py. Resumable: ids already present are skipped.
 """
 import _bootstrap  # noqa: F401
 
@@ -16,15 +18,24 @@ import time
 from openai import AsyncOpenAI, BadRequestError
 from tqdm import tqdm
 
+from kc_judge.data import load_incorrect
 from kc_judge.io import JsonlAppender, done_ids
+from kc_judge.kt_api import KT_OUT_DIR
 from kc_judge.mathedu import API_MODELS, OUT_DIR, load_balanced_ids, load_eval
-from kc_judge.prompts import build_mathedu_messages
+from kc_judge.prompts import build_kt_api_messages, build_mathedu_messages
 
 GEN_DIR = OUT_DIR / "gen"
 
+# (row loader, prompt builder, id field, output dir) per dataset
+DATASETS = {
+    "mathedu": (load_eval, build_mathedu_messages, "uid", OUT_DIR / "gen"),
+    "kt": (load_incorrect, build_kt_api_messages, "session_id", KT_OUT_DIR / "gen"),
+}
+
 
 async def judge(client: AsyncOpenAI, sem: asyncio.Semaphore, row: dict, args) -> dict:
-    messages = build_mathedu_messages(row)
+    build, key = DATASETS[args.dataset][1], DATASETS[args.dataset][2]
+    messages = build(row)
     params = {"max_completion_tokens": args.max_completion_tokens}
     if args.temperature is not None:
         params["temperature"] = args.temperature
@@ -43,14 +54,14 @@ async def judge(client: AsyncOpenAI, sem: asyncio.Semaphore, row: dict, args) ->
                 raise
             except Exception as e:  # rate limit, transient network
                 if attempt == 5:
-                    return {"uid": row["uid"], "model": args.model, "generation": "", "finish_reason": f"error: {e!r}",
+                    return {key: row[key], "model": args.model, "generation": "", "finish_reason": f"error: {e!r}",
                             "gen_tokens": 0, "reasoning_tokens": 0}
                 await asyncio.sleep(2**attempt + random.random())
     choice = resp.choices[0]
     usage = resp.usage
     details = getattr(usage, "completion_tokens_details", None)
     return {
-        "uid": row["uid"],
+        key: row[key],
         "model": args.model,
         "temperature": params.get("temperature"),
         "prompt_tokens": usage.prompt_tokens,
@@ -62,13 +73,14 @@ async def judge(client: AsyncOpenAI, sem: asyncio.Semaphore, row: dict, args) ->
 
 
 async def main_async(args) -> None:
-    rows = load_eval()
+    load_rows, _, key, gen_dir = DATASETS[args.dataset]
+    rows = load_rows()
     if args.balanced_only:
         keep = load_balanced_ids()
         rows = [r for r in rows if r["uid"] in keep]
-    out = GEN_DIR / f"{args.model}.jsonl"
-    done = done_ids(out, key="uid")
-    todo = [r for r in rows if r["uid"] not in done]
+    out = gen_dir / f"{args.model}.jsonl"
+    done = done_ids(out, key=key)
+    todo = [r for r in rows if r[key] not in done]
     if args.limit:
         todo = todo[: args.limit]
     print(f"[{args.model}] rows={len(rows)} done={len(done)} todo={len(todo)} -> {out}")
@@ -91,13 +103,16 @@ async def main_async(args) -> None:
 
 def main() -> None:
     ap = argparse.ArgumentParser()
+    ap.add_argument("--dataset", choices=list(DATASETS), default="mathedu")
     ap.add_argument("--model", choices=API_MODELS, required=True)
     ap.add_argument("--temperature", type=float, default=1.0, help="pass a negative value to omit")
     ap.add_argument("--max-completion-tokens", type=int, default=3000)
     ap.add_argument("--concurrency", type=int, default=8)
     ap.add_argument("--limit", type=int, default=0)
-    ap.add_argument("--balanced-only", action="store_true")
+    ap.add_argument("--balanced-only", action="store_true", help="mathedu only")
     args = ap.parse_args()
+    if args.balanced_only and args.dataset != "mathedu":
+        ap.error("--balanced-only only applies to --dataset mathedu")
     if args.temperature is not None and args.temperature < 0:
         args.temperature = None
     asyncio.run(main_async(args))
